@@ -1,7 +1,14 @@
-logentries-jboss7
+logentries-wildfly
 =================
 
-Simple adapter to use LogEntries' AsyncLogger with JBoss7.1.x
+Simple adapter to use LogEntries' AsyncLogger with Wildfly
+
+Why you don't use the com.logentries.jul.LogentriesHandler directly?
+------
+
+The class com.logentries.jul.LogentriesHandler have the token property as a byte[] and I dont know how to
+set the token as a byte[] in the Wildfly configuration
+
 
 To Use
 ------
@@ -9,47 +16,22 @@ To Use
 1. On logentries website, create a new log and have the token available.
 1. Build the jar:
 
-        mvn clean install dependency:copy
+        mvn clean install
 
-1. Create an a new JBoss module directory: i.e. Jboss-as-7.1.0.Final/modules/com/company/logentries/main
-1. Copy the target/logentries-jboss7-*.jar and target/dependency/logentries-appender-*.jar to your new jboss module directory</li>
-1. Create a module.xml file:
+1. Create an a new Wildfly module with the Wildfly CLI:
 
-        <?xml version="1.0" encoding="UTF-8"?>
-        <module xmlns="urn:jboss:module:1.0" name="com.company.logentries">
-          <resources>
-            <resource-root path="logentries-jboss7-XXX.jar"/>
-            <resource-root path="logentries-appender-XXX.jar"/>
-          </resources>
-          <dependencies>
-            <module name="org.jboss.logging"/>
-            <module name="javax.api"/>
-          </dependencies>
-        </module>
+     module add --name=com.upplication.logentries --resources=$LOGENTRIES_JAR_PATH_WITH_DEPENDENCIES --dependencies=javax.api,org.jboss.logging
 
-1. Modify your JBoss configuration file (ex: standalone.xml) and add the following sections to your logging subsystem:
+1. Create a custom handler:
 
-        <custom-handler name="LogEntriesAppender" class="us.bigd.logentries.LogEntriesAdapterHandler" module="com.company.logentries">
-          <level name="DEBUG"/>
-          <formatter>
-            <pattern-formatter pattern="%d{HH:mm:ss,SSS} %-5p [%c] (%t) %s%E%n"/>
-          </formatter>
-          <properties>
-            <property name="token" value="YOUR_TOKEN"/>
-          </properties>
-        </custom-handler>
-        ...
-        <root-logger>
-          <level name="INFO"/>
-          <handlers>
-            <handler name="CONSOLE"/>
-            <handler name="FILE"/>
-            <handler name="LogEntriesAppender"/>
-          </handlers>
-        </root-logger>
-    
-1. Fire up JBoss and monitor logs to confirm the module loads without errors.
+     /subsystem=logging/custom-handler=logentries:add(class=us.bigd.logentries.LogEntriesAdapterHandler, module=com.upplication.logentries, formatter="%d{HH:mm:ss,SSS} %-5p [%c] (%t) %s%E%n", properties={token="$YOUR_TOKEN"})
+
+1. Add  handler to root-logger
+
+    /subsystem=logging/root-logger=ROOT:root-logger-assign-handler(name="logentries")
+    /subsystem=logging/root-logger=ROOT:write-attribute(name="level", value="INFO")
+
+
+1. Fire up Wildfly and monitor logs to confirm the module loads without errors.
 1. Monitor logentries log for incoming data.
-    
-It'd be nice if logentries supported the Handler interface in future versions!
     

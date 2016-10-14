@@ -6,7 +6,7 @@ import java.util.logging.LogRecord;
 import com.logentries.net.AsyncLogger;
 
 /**
- * <p>Adapter from {@link Handler} to {@link AsyncLogger} for use in JBoss 7.1.X.</p>
+ * <p>Adapter from {@link Handler} to {@link AsyncLogger} for use in JBoss & Wildfly</p>
  */
 public class LogEntriesAdapterHandler extends Handler {
 
